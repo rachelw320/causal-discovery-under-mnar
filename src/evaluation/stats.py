@@ -3,14 +3,7 @@ from scipy.stats import wilcoxon
 
 
 def wilcoxon_test(baseline_shd: list, condition_shd: list) -> dict:
-    """
-    Wilcoxon signed-rank test comparing SHD distributions from two conditions.
-
-    Used to determine whether the difference in structural accuracy between
-    baseline (complete data) and a missingness condition is statistically significant.
-
-    Returns stat, p-value, and a plain-English significance label.
-    """
+    """Wilcoxon signed-rank test between two SHD distributions."""
     stat, p = wilcoxon(baseline_shd, condition_shd)
     return {
         "statistic": stat,
@@ -21,14 +14,7 @@ def wilcoxon_test(baseline_shd: list, condition_shd: list) -> dict:
 
 
 def compare_conditions(results: dict) -> pd.DataFrame:
-    """
-    Compare all missingness conditions against the baseline using Wilcoxon tests.
-
-    results: dict keyed by condition label (e.g. 'baseline', 'MNAR_0.3'),
-             each value is a list of SHD scores across bootstrap iterations.
-
-    Returns a DataFrame with one row per comparison.
-    """
+    """Compare each condition against 'baseline' using Wilcoxon tests."""
     baseline = results["baseline"]
     rows = []
 
