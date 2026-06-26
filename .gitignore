@@ -14,8 +14,7 @@ venv/
 env/
 .venv/
 
-# Results (large files generated at runtime)
-results/*.csv
+# Results
 results/*.png
 
 # OS
