@@ -76,3 +76,46 @@ print(f"\nSHD with no constraints:                    {shd_none}")
 print(f"SHD with chi-square selective constraints:  {shd_chi2}")
 print(f"SHD with logistic selective constraints:    {shd_logistic}")
 print(f"SHD with global constraints:                {shd_global}")
+
+# bootstrap over 30 iterations -- detection is fixed, only PC varies per sample
+import config
+rng = np.random.default_rng(config.RANDOM_SEED)
+
+records = {"none": [], "chi2": [], "logistic": [], "global": []}
+
+# build background knowledge objects once from the full df_mnar
+bk_chi2_boot = apply_constraints(df_mnar, flagged_chi2, true_edges)
+bk_logistic_boot = apply_constraints(df_mnar, flagged_logistic, true_edges)
+bk_global_boot = apply_constraints(df_mnar, [(a, b, 0.0) for a, b in true_edges], true_edges)
+
+print(f"\nRunning {config.BOOTSTRAP_ITERATIONS} bootstrap iterations...")
+
+for i in range(config.BOOTSTRAP_ITERATIONS):
+    boot_sample = df_mnar.sample(n=len(df_mnar), replace=True,
+                                 random_state=int(rng.integers(1e6)))
+    arr, names = to_array(boot_sample)
+
+    cg = pc(arr, alpha=0.05, indep_test=chisq, show_progress=False, node_names=names)
+    records["none"].append(compute_shd(true_edges, extract_edges(cg.G.graph, names), all_nodes))
+
+    cg = pc(arr, alpha=0.05, indep_test=chisq, show_progress=False, node_names=names,
+            background_knowledge=bk_chi2_boot)
+    records["chi2"].append(compute_shd(true_edges, extract_edges(cg.G.graph, names), all_nodes))
+
+    cg = pc(arr, alpha=0.05, indep_test=chisq, show_progress=False, node_names=names,
+            background_knowledge=bk_logistic_boot)
+    records["logistic"].append(compute_shd(true_edges, extract_edges(cg.G.graph, names), all_nodes))
+
+    cg = pc(arr, alpha=0.05, indep_test=chisq, show_progress=False, node_names=names,
+            background_knowledge=bk_global_boot)
+    records["global"].append(compute_shd(true_edges, extract_edges(cg.G.graph, names), all_nodes))
+
+    print(f"  iteration {i + 1}/{config.BOOTSTRAP_ITERATIONS} done")
+
+print(f"\nBootstrap results (n={config.BOOTSTRAP_ITERATIONS}):")
+for label, key in [("no constraints         ", "none"),
+                   ("chi-square selective   ", "chi2"),
+                   ("logistic selective     ", "logistic"),
+                   ("global                 ", "global")]:
+    vals = np.array(records[key])
+    print(f"  {label}  mean SHD={vals.mean():.2f}  std={vals.std():.2f}")
