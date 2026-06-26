@@ -1,0 +1,9 @@
+dataset,severity,mean_shd_none,mean_shd_logistic,p_value,significant
+asia,10,7.467,3.333,1e-06,True
+asia,20,8.5,3.567,1e-06,True
+asia,30,9.433,4.3,2e-06,True
+asia,50,9.0,3.6,2e-06,True
+sachs,10,24.833,6.2,2e-06,True
+sachs,20,25.967,7.0,2e-06,True
+sachs,30,27.333,5.2,2e-06,True
+sachs,50,23.033,11.6,2e-06,True
