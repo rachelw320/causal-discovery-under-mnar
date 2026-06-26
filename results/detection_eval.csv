@@ -1,0 +1,17 @@
+dataset,severity,detector,flagged,true_positives,precision,recall
+asia,10,chi2,2,1,0.5,0.125
+asia,10,logistic,13,6,0.462,0.75
+asia,20,chi2,1,1,1.0,0.125
+asia,20,logistic,15,7,0.467,0.875
+asia,30,chi2,6,3,0.5,0.375
+asia,30,logistic,14,7,0.5,0.875
+asia,50,chi2,8,4,0.5,0.5
+asia,50,logistic,17,7,0.412,0.875
+sachs,10,chi2,1,1,1.0,0.059
+sachs,10,logistic,21,14,0.667,0.824
+sachs,20,chi2,5,4,0.8,0.235
+sachs,20,logistic,25,15,0.6,0.882
+sachs,30,chi2,10,5,0.5,0.294
+sachs,30,logistic,26,16,0.615,0.941
+sachs,50,chi2,20,11,0.55,0.647
+sachs,50,logistic,31,16,0.516,0.941
