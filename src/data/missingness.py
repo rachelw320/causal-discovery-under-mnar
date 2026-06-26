@@ -18,7 +18,7 @@ def inject_mar(df: pd.DataFrame, rate: float, seed: int = config.RANDOM_SEED) ->
     cols = df_out.columns.tolist()
 
     anchor = df_out[cols[0]].astype("category").cat.codes
-    anchor_norm = (anchor - anchor.min()) / (anchor.max() - anchor.min() + 1e-9)
+    anchor_norm = anchor.rank(pct=True)
 
     for col in cols[1:]:
         prob = np.clip(anchor_norm * rate * 2, 0, 1)

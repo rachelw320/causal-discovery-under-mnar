@@ -5,7 +5,7 @@ def _install(package):
     try:
         __import__(package.replace("-", "_").split(">=")[0])
     except ImportError:
-        print(f"Installing {package}...")
+        print(f"Installing this package: {package}")
         subprocess.check_call([sys.executable, "-m", "pip", "install", package, "-q"])
 
 _install("causal-learn")
@@ -27,7 +27,7 @@ print("="*60)
 network = get_example_model("sachs")
 df = BayesianModelSampling(network).forward_sample(size=1000, seed=42)
 
-node_names = list(df.columns)  # column order matters for causal-learn
+node_names = list(df.columns)
 true_edges = set(network.edges())
 
 print(f"Nodes ({len(node_names)}): {node_names}")
