@@ -1,0 +1,22 @@
+Rerun log - 2026-06-26
+
+Had to rerun everything after fixing two bugs (see bug_fix_log.txt).
+The MAR results from run 1 were all invalid and so were the GES Sachs results.
+
+Settings were unchanged from the first run.
+5000 rows, 30 bootstrap iterations, seed 42, both datasets, both algorithms.
+
+Checked the fixes worked before rerunning.
+MAR rates now: 10% target gives 8.6% actual, 20% gives 17.5%, 30% gives 26.3%, 50% gives 43.5%.
+GES on Sachs now returns actual edges (17 edges, SHD=30) rather than empty set (SHD=17).
+
+Rerun completed. Results saved to baseline_results.csv and missingness_results.csv.
+
+A few things worth noting in the results.
+Sachs GES baseline SHD=30 with zero variance - GES finds the same CPDAG every run because
+the Sachs skeleton is very consistent at n=5000. Zero std is expected not a bug.
+MCAR on Sachs shows SHD going down as missingness increases which looks odd but makes sense
+because at very high MCAR so many rows get dropped that the algorithm returns a sparse graph
+which by chance has lower SHD than the wrong dense graph it was learning before.
+Asia GES MAR at 50% jumps to SHD=10.5 which is a big increase, expected given how much
+data is lost to listwise deletion at that severity.

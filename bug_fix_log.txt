@@ -1,0 +1,19 @@
+Bug fix log - 2026-06-26
+
+Bug 1: inject_mar() was not responding to the rate parameter.
+Checked the output and all MAR results were identical across severity levels.
+The anchor column in Asia ('asia') is very skewed - about 99% of rows are 'no'.
+The old normalisation squashed nearly all probabilities to zero so almost nothing got masked.
+Fixed by switching to percentile rank (anchor.rank(pct=True)) which spreads values evenly regardless of skew.
+Verified: actual missingness rates now track the target rates.
+
+Bug 2: undirected edges were being silently dropped in both pc_wrapper and ges_wrapper.
+GES on Sachs was returning SHD=17 with zero variance on every run which looked wrong.
+Turned out GES was returning a fully undirected CPDAG and the wrapper only handled directed edges.
+All undirected edges (graph[i,j]==-1 and graph[j,i]==-1) were just being ignored.
+Fixed by adding alphabetical orientation for undirected edges in both wrappers.
+Same fix applied to pc_wrapper since it had the same issue.
+Also added structure_prior=0 to GES parameters which was missing.
+
+Both bugs affected the first experiment run so a full rerun was needed.
+See rerun_log.txt for the new results.
