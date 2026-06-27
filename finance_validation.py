@@ -16,11 +16,23 @@ _install("pandas-datareader")
 
 import numpy as np
 import pandas as pd
+import requests
+import urllib3
 from collections import Counter
 from itertools import combinations
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 import yfinance as yf
 import pandas_datareader.data as pdr
+from curl_cffi import requests as crequests
+
+# curl_cffi session for yfinance (bypasses SSL on Windows Python 3.14)
+_yf_session = crequests.Session(verify=False)
+
+# requests session for pandas-datareader / FRED
+_session = requests.Session()
+_session.verify = False
 
 from causallearn.search.ConstraintBased.PC import pc
 from causallearn.search.ScoreBased.GES import ges
@@ -41,13 +53,23 @@ TICKERS = {
     "DX-Y.NYB": "USD",
 }
 
+# FRED fallback for each market ticker (in case yfinance is rate limited)
+FRED_MARKET_FALLBACK = {
+    "SP500": "NASDAQCOM",     # NASDAQ composite, daily from 1971
+    "VIX": "VIXCLS",          # CBOE VIX, daily from 1990
+    "TNX": "DGS10",           # 10Y Treasury, daily from 1962
+    "OIL": "DCOILWTICO",      # WTI crude oil, daily from 1986
+    "GOLD": "PPIACO",         # PPI all commodities proxy, monthly from 1913
+    "USD": "TWEXBGSMTH",      # broad USD index, monthly from 2006
+}
+
 FRED_SERIES = {
     "UNRATE": "UNRATE",
     "CPIAUCSL": "CPI",
     "FEDFUNDS": "FEDFUNDS",
     "HOUST": "HOUST",
     "UMCSENT": "UMCSENT",
-    "BAMLH0A0HYM2": "CREDSPREAD",
+    "BAA": "CREDSPREAD",  # Moody's BAA yield, proxy for credit conditions
 }
 
 KNOWN_RELATIONS = {
@@ -71,30 +93,62 @@ KNOWN_RELATIONS = {
 os.makedirs(config.RESULTS_DIR, exist_ok=True)
 
 
-# download market data and resample to monthly end
-print("Downloading market data...")
+def fred_monthly(series_id, name):
+    raw = pdr.DataReader(series_id, "fred", START, END, session=_session).squeeze()
+    s = raw.resample("ME").last().dropna()
+    s.index = s.index.to_period("M").to_timestamp("M")
+    return s
+
+
+# try yfinance first; fall back to FRED equivalent for any failed ticker
+import time
+print("Downloading market data (yfinance, with FRED fallback)...")
 market_frames = {}
-for ticker, name in TICKERS.items():
-    try:
-        raw = yf.download(ticker, start=START, end=END, auto_adjust=True, progress=False)
-        if isinstance(raw.columns, pd.MultiIndex):
-            raw.columns = [col[0] for col in raw.columns]
-        s = raw["Close"].resample("ME").last()
-        s.index = s.index.to_period("M").to_timestamp("M")
-        market_frames[name] = s
-        print(f"  {name}: {len(s)} months")
-    except Exception as e:
-        print(f"  {name}: failed ({e})")
+ticker_list = list(TICKERS.keys())
+yf_results = {}
+
+time.sleep(5)
+try:
+    raw_all = yf.download(ticker_list, start=START, end=END, auto_adjust=True,
+                          progress=False, group_by="ticker", session=_yf_session)
+    for ticker, name in TICKERS.items():
+        try:
+            lvl0 = raw_all.columns.get_level_values(0)
+            if ticker in lvl0:
+                s = raw_all[ticker]["Close"].resample("ME").last().dropna()
+            else:
+                s = raw_all["Close"][ticker].resample("ME").last().dropna()
+            if len(s) > 0:
+                s.index = s.index.to_period("M").to_timestamp("M")
+                market_frames[name] = s
+                yf_results[name] = True
+                print(f"  {name}: {len(s)} months (yfinance)")
+            else:
+                yf_results[name] = False
+        except Exception:
+            yf_results[name] = False
+except Exception as e:
+    print(f"  yfinance batch failed: {e}")
+    for name in TICKERS.values():
+        yf_results[name] = False
+
+# FRED fallback for any ticker that failed yfinance
+for name, fred_id in FRED_MARKET_FALLBACK.items():
+    if not yf_results.get(name, False):
+        try:
+            s = fred_monthly(fred_id, name)
+            market_frames[name] = s
+            print(f"  {name}: {len(s)} months (FRED fallback: {fred_id})")
+        except Exception as e:
+            print(f"  {name}: all sources failed ({e})")
 
 
 # download FRED macro series
-print("Downloading FRED data...")
+print("Downloading FRED macro data...")
 fred_frames = {}
 for series_id, name in FRED_SERIES.items():
     try:
-        raw = pdr.DataReader(series_id, "fred", START, END).squeeze()
-        s = raw.resample("ME").last()
-        s.index = s.index.to_period("M").to_timestamp("M")
+        s = fred_monthly(series_id, name)
         fred_frames[name] = s
         print(f"  {name}: {len(s)} months")
     except Exception as e:

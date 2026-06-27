@@ -1,0 +1,17 @@
+type,variable,value
+missingness,SP500,0.0
+missingness,VIX,0.0
+missingness,TNX,0.0
+missingness,OIL,0.0
+missingness,GOLD,0.0
+missingness,USD,24.0
+missingness,UNRATE,0.0
+missingness,CPI,0.0
+missingness,FEDFUNDS,0.0
+missingness,HOUST,0.0
+missingness,UMCSENT,0.0
+missingness,CREDSPREAD,0.0
+detection,chi2_flagged_pairs,0.0
+detection,logistic_flagged_pairs,10.0
+complete_cases,n_complete,228.0
+complete_cases,n_total,300.0
