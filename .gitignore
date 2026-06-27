@@ -17,6 +17,9 @@ env/
 # Results
 results/*.png
 
+# Downloaded raw data files
+data/
+
 # OS
 .DS_Store
 Thumbs.db

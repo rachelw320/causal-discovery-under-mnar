@@ -1,0 +1,17 @@
+type,variable,value
+missingness,RIDAGEYR,0.0
+missingness,RIAGENDR,0.0
+missingness,INDFMPIR,13.3
+missingness,BMXBMI,13.5
+missingness,BPXSY1,31.9
+missingness,BPXDI1,31.9
+missingness,LBXTC,27.19
+missingness,LBDHDD,27.19
+missingness,SMQ020,36.72
+missingness,DIQ010,3.9
+missingness,PAQ605,36.78
+missingness,ALQ130,62.3
+detection,chi2_flagged_pairs,44.0
+detection,logistic_flagged_pairs,53.0
+complete_cases,n_complete,2662.0
+complete_cases,n_total,9254.0
