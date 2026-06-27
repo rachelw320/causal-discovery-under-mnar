@@ -1,67 +1,33 @@
-# causal-discovery-under-mnar
-Investigating how MNAR missing data degrades causal structure learning, with a missingness-aware detection and constraint pipeline.
-
-
 # Causal Discovery Under MNAR
+
+MSc Computer Science dissertation, Queen Mary University of London.
+Supervised by Dr Anthony Constantinou, Bayesian AI Lab, 2025 to 2026.
 
 ## What this project is about
 
-When doctors and researchers try to understand *why* things happen 
-(not just what correlates with what), they use algorithms that learn 
-cause-and-effect relationships from data. These are called causal 
-discovery algorithms.
-
-But there's a problem. These algorithms assume your data is reasonably 
-complete. In reality — especially in healthcare — data goes missing 
-for reasons that aren't random. A blood test might not be recorded 
-because the patient was too sick to have it done. A measurement might 
-be missing because the clinician already knew the result would be 
-abnormal. This is called **MNAR** (Missing Not At Random), and it's 
-everywhere in real clinical data.
-
-This project asks: **how badly does MNAR break causal discovery 
-algorithms, and can we fix it?**
+Causal discovery algorithms learn cause and effect relationships from data. They assume data is reasonably complete. In practice, especially in healthcare, data goes missing for reasons tied to the missing values themselves. This is called MNAR (Missing Not At Random). This project tests how badly MNAR degrades causal discovery and whether a detection and constraint pipeline can recover accuracy.
 
 ## What I did
 
-I ran controlled experiments where I took a dataset with a known 
-correct causal structure, deliberately introduced different types of 
-missing data, and measured how wrong the algorithms' outputs became.
+I ran controlled experiments on two benchmark networks (Asia and Sachs) using PC and GES. I injected three types of missingness at four severity levels (10%, 20%, 30%, 50%) and measured structural error using SHD. I then built a two stage pipeline: a detection stage that flags variable pairs likely corrupted by MNAR, and a constraint stage that applies targeted edge corrections to those pairs before structure learning.
 
-- **Three types of missingness tested:** random (MCAR), dependent on 
-  other variables (MAR), and dependent on the missing value itself (MNAR)
-- **Two algorithms tested:** PC (constraint-based) and GES (score-based)
-- **Two benchmark networks:** Asia (8 variables) and Sachs 
-  (11 variables — a real protein signalling network)
-- **Real-world validation:** NHANES healthcare survey data, which has 
-  genuine clinical missingness
-
-I then built a two-stage pipeline to try to recover accuracy:
-1. **Detection stage** — automatically identifies which variable 
-   relationships are likely corrupted by MNAR
-2. **Constraint stage** — applies targeted corrections only to those 
-   relationships, using known domain knowledge
+Two detectors were compared: chi-square (tests for correlated missingness patterns) and logistic regression (tests whether observed values of one variable predict missingness in another).
 
 ## What I found
 
-[Results to be added as experiments complete]
+The logistic detection pipeline reduces mean SHD by over 80% compared to unconstrained structure learning under MNAR conditions. Improvements are statistically significant at all severity levels and across both benchmark networks (Wilcoxon signed-rank, p < 0.05 in all 8 comparisons).
 
-## How to run this project
+The chi-square detector has very low recall at low MNAR severity, dropping to 6% on Sachs at 10% missingness. The logistic detector maintains recall between 75% and 94% across all tested conditions. The pipeline generalises to both PC and GES.
 
-[Setup instructions to be added]
+## How to run
 
-## Tools and packages used
+```
+pip install causal-learn pgmpy scipy scikit-learn pandas numpy matplotlib seaborn
+python run_experiments.py
+python test_pipeline_full.py
+python test_significance.py
+```
 
-- Python 3
-- [causal-learn](https://causal-learn.readthedocs.io/) — PC and GES 
-  algorithms
-- pgmpy — Bayesian network simulation
-- pandas, numpy — data handling
-- matplotlib, seaborn — visualisation
+## Tools used
 
-## Project background
-
-MSc Computer Science dissertation  
-Queen Mary University of London  
-Supervised by Dr Anthony Constantinou, Bayesian AI Lab  
-2025–2026
+Python 3, causal-learn, pgmpy, scikit-learn, scipy, pandas, numpy, matplotlib, seaborn.
