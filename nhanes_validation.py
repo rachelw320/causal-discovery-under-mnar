@@ -90,7 +90,7 @@ def discretise(series):
     try:
         return pd.qcut(series, q=3, labels=[0, 1, 2]).astype(float)
     except ValueError:
-        # skewed variable: rank first to force equal bin sizes
+        # rank first to get even bins on skewed data
         ranked = series.rank(method="first", na_option="keep")
         return pd.qcut(ranked, q=3, labels=[0, 1, 2]).astype(float)
 
@@ -170,8 +170,7 @@ print(f"Chi-square flagged pairs: {len(flagged_chi2)}")
 print(f"Logistic flagged pairs:   {len(flagged_logistic)}")
 
 
-# apply logistic constraints using alphabetical orientation
-# no ground truth for NHANES so direction is alphabetical
+# no ground truth for NHANES so orient flagged pairs alphabetically
 def build_nhanes_bk(flagged_pairs):
     bk = BackgroundKnowledge()
     for col_a, col_b, _ in flagged_pairs:

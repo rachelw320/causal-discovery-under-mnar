@@ -54,7 +54,7 @@ def shd(true, learned):
 
 
 print("\n" + "="*60)
-print("STEP 2: PC algorithm — clean data")
+print("STEP 2: PC on clean data")
 print("="*60)
 
 data_clean = to_array(df)
@@ -67,7 +67,7 @@ print(f"SHD (PC, clean): {shd_pc_clean}")
 
 
 print("\n" + "="*60)
-print("STEP 3: GES algorithm — clean data")
+print("STEP 3: GES on clean data")
 print("="*60)
 
 record = ges(data_clean, score_func="local_score_BDeu", parameters={"sample_prior": 1})
@@ -79,7 +79,7 @@ print(f"SHD (GES, clean): {shd_ges_clean}")
 
 
 print("\n" + "="*60)
-print("STEP 4: PC — MCAR 20%")
+print("STEP 4: PC MCAR 20%")
 print("="*60)
 
 rng = np.random.default_rng(42)
@@ -98,7 +98,7 @@ print(f"SHD (PC, MCAR 20%): {shd_pc_mcar}")
 
 
 print("\n" + "="*60)
-print("STEP 5: PC — MNAR 20% (high values preferentially missing)")
+print("STEP 5: PC MNAR 20%")
 print("="*60)
 
 df_mnar = df.copy().astype(object)
@@ -125,15 +125,15 @@ print(f"SHD (PC, MNAR 20%): {shd_pc_mnar}")
 print("\n" + "="*60)
 print("FINAL COMPARISON")
 print("="*60)
-print(f"  PC  — Clean data : SHD = {shd_pc_clean}")
-print(f"  GES — Clean data : SHD = {shd_ges_clean}")
-print(f"  PC  — MCAR  20%  : SHD = {shd_pc_mcar}   (random missingness)")
-print(f"  PC  — MNAR  20%  : SHD = {shd_pc_mnar}   (informative missingness)")
+print(f"  PC  clean data : SHD = {shd_pc_clean}")
+print(f"  GES clean data : SHD = {shd_ges_clean}")
+print(f"  PC  MCAR 20%   : SHD = {shd_pc_mcar}")
+print(f"  PC  MNAR 20%   : SHD = {shd_pc_mnar}")
 print()
 
 if shd_pc_mnar > shd_pc_mcar:
     print(f"MNAR is worse than MCAR by {shd_pc_mnar - shd_pc_mcar} SHD point(s). Feasibility confirmed.")
 elif shd_pc_mnar == shd_pc_mcar:
-    print("MNAR and MCAR tied — likely small-sample variance. Use n=5000 + 30 bootstrap iterations.")
+    print("MNAR and MCAR tied. Likely small-sample variance. Use n=5000 + 30 bootstrap iterations.")
 else:
-    print("MNAR came out lower than MCAR — small-sample fluke. Use n=5000 + 30 bootstrap iterations.")
+    print("MNAR came out lower than MCAR. Likely small-sample fluke. Use n=5000 + 30 bootstrap iterations.")

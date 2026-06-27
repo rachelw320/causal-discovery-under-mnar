@@ -38,7 +38,7 @@ def extract_edges_ges(g, col_names):
 
 
 def apply_orientations(edges, required_directions):
-    # post-hoc: flip any edge that came out backwards relative to a known constraint
+    # flip edges that came out backwards
     result = set()
     for a, b in edges:
         if (b, a) in required_directions:

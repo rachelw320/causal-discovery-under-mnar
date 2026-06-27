@@ -77,7 +77,7 @@ print(f"SHD with chi-square selective constraints:  {shd_chi2}")
 print(f"SHD with logistic selective constraints:    {shd_logistic}")
 print(f"SHD with global constraints:                {shd_global}")
 
-# bootstrap over 30 iterations -- detection is fixed, only PC varies per sample
+# bootstrap PC only, detection flags are fixed
 import config
 rng = np.random.default_rng(config.RANDOM_SEED)
 
