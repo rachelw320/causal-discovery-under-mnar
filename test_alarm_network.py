@@ -8,6 +8,7 @@ from causallearn.search.ConstraintBased.PC import pc
 from causallearn.search.ScoreBased.GES import ges
 from causallearn.utils.cit import chisq
 from scipy.stats import wilcoxon
+from sklearn.impute import SimpleImputer
 
 import config
 from src.data.loader import load_network, sample_data, get_true_edges
@@ -24,8 +25,11 @@ BOOTSTRAP_N = 30
 # helpers
 
 def to_array(df):
-    clean = df.dropna()
-    return clean.apply(lambda c: c.astype("category").cat.codes).to_numpy(), clean.columns.tolist()
+    # Alarm has 37 nodes so listwise deletion leaves almost no complete cases.
+    # Use mode imputation so PC/GES always receive a full dataset.
+    imp = SimpleImputer(strategy="most_frequent")
+    filled = pd.DataFrame(imp.fit_transform(df), columns=df.columns)
+    return filled.apply(lambda c: c.astype("category").cat.codes).to_numpy(), filled.columns.tolist()
 
 
 def extract_edges(graph_matrix, col_names):
