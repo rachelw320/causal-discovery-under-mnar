@@ -1,0 +1,9 @@
+dataset,severity,algorithm,shd_mean,shd_std
+alarm,10,PC,29.9,4.686
+alarm,10,GES,12.2,6.183
+alarm,20,PC,29.933,4.654
+alarm,20,GES,12.2,6.183
+alarm,30,PC,31.9,4.571
+alarm,30,GES,12.467,6.682
+alarm,50,PC,30.333,5.546
+alarm,50,GES,12.8,6.236
