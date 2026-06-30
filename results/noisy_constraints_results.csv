@@ -1,0 +1,8 @@
+condition,noise_rate,shd_mean,shd_std
+no_constraints,0.0,27.333,4.693
+logistic_clean,0.0,5.2,1.701
+global_oracle,0.0,3.8,1.681
+logistic_noisy_10pct,0.1,13.133,1.707
+logistic_noisy_20pct,0.2,9.0,1.751
+logistic_noisy_30pct,0.3,15.133,1.5
+logistic_noisy_50pct,0.5,28.467,1.586
