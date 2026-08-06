@@ -3,7 +3,9 @@ __pycache__/
 *.py[cod]
 *.pyo
 .env
+*.env
 *.egg-info/
+.pytest_cache/
 
 # Jupyter
 .ipynb_checkpoints/
@@ -17,8 +19,16 @@ env/
 # Results
 results/*.png
 
+# Local validation backups
+results/pre_fix_backup/
+results/version_checks/
+
 # Downloaded raw data files
 data/
+
+# Editor files
+.vscode/
+.idea/
 
 # OS
 .DS_Store

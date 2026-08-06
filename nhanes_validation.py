@@ -2,11 +2,9 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(__file__))
 
-import io
 import numpy as np
 import pandas as pd
 import requests
-import urllib3
 from collections import Counter
 from itertools import combinations
 from causallearn.search.ConstraintBased.PC import pc
@@ -16,8 +14,6 @@ from causallearn.utils.PCUtils.BackgroundKnowledge import BackgroundKnowledge
 
 import config
 from src.detection.detector import detect_mnar_pairs, detect_mnar_pairs_logistic
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/"
 FILES = [
@@ -32,13 +28,16 @@ NHANES_DIR = os.path.join("data", "nhanes")
 os.makedirs(NHANES_DIR, exist_ok=True)
 os.makedirs(config.RESULTS_DIR, exist_ok=True)
 
+VERIFY_SSL = os.getenv("NHANES_SSL_VERIFY", "true").lower() not in {"0", "false", "no"}
+if not VERIFY_SSL:
+    print("WARNING: NHANES SSL certificate verification has been disabled through NHANES_SSL_VERIFY.")
 
 # download files
 for fname in FILES:
     fpath = os.path.join(NHANES_DIR, fname)
     if not os.path.exists(fpath):
         print(f"Downloading {fname}...")
-        r = requests.get(BASE_URL + fname, verify=False,
+        r = requests.get(BASE_URL + fname, verify=VERIFY_SSL,
                          headers={"User-Agent": "Mozilla/5.0"}, timeout=60)
         r.raise_for_status()
         with open(fpath, "wb") as f:

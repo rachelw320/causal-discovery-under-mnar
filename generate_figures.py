@@ -50,7 +50,6 @@ alarm_miss = pd.read_csv("results/alarm_missingness_results.csv")
 alarm_pipe = pd.read_csv("results/alarm_pipeline_results.csv")
 nhanes_stab = pd.read_csv("results/nhanes_stability.csv")
 nhanes_res = pd.read_csv("results/nhanes_results.csv")
-fin_stab = pd.read_csv("results/finance_stability.csv")
 
 
 def save(name, caption):

@@ -1,62 +1,135 @@
 # Causal Discovery Under MNAR
 
-MSc Computer Science dissertation, Queen Mary University of London.
-Supervised by Dr Anthony Constantinou, Bayesian AI Lab, 2025 to 2026.
+This repository contains supporting material for an MSc Computer Science project on causal discovery under MNAR missingness. The retained workflow is a research pipeline rather than a packaged application: it uses Python scripts, CSV result files, and figures to reproduce the main experiments and to document the evaluation logic.
 
-## What this project is about
+## Project overview
 
-Causal discovery algorithms learn cause and effect relationships from data. They assume data is reasonably complete. In practice, especially in healthcare, data goes missing for reasons tied to the missing values themselves. This is called MNAR (Missing Not At Random). This project tests how badly MNAR degrades causal discovery and whether a detection and constraint pipeline can recover accuracy.
+The project studies how missingness that is related to the missing value itself (MNAR) affects causal discovery on benchmark networks and on real-world NHANES data. The workflow compares PC and GES on synthetic data, evaluates a detection-and-constraint pipeline, and then validates the approach on a real dataset where no ground-truth causal graph is available.
 
-## What I did
+The retained experiments cover:
+- benchmark datasets: Asia, Sachs, and Alarm;
+- missingness mechanisms: MCAR, MAR, and MNAR;
+- detection strategies: chi-square and logistic regression;
+- constraint-based recovery in which detector-flagged benchmark pairs are assigned directions from the known ground-truth graph, alongside a global oracle condition;
+- evaluation with SHD, false-positive and false-negative rates, bootstrap stability, and paired significance testing.
 
-I ran controlled experiments on two benchmark networks (Asia and Sachs) using PC and GES. I injected three types of missingness at four severity levels (10%, 20%, 30%, 50%) and measured structural error using SHD. I then built a two stage pipeline: a detection stage that flags variable pairs likely corrupted by MNAR, and a constraint stage that applies targeted edge corrections to those pairs before structure learning.
+## Repository structure
 
-Two detectors were compared: chi-square (tests for correlated missingness patterns) and logistic regression (tests whether observed values of one variable predict missingness in another).
+The core submission includes:
+- [README.md](README.md): project overview, setup, and run instructions.
+- [run_experiments.py](run_experiments.py): baseline and missingness experiments for Asia and Sachs.
+- [test_pipeline_full.py](test_pipeline_full.py): PC pipeline comparison across four constraint conditions.
+- [test_pipeline_ges.py](test_pipeline_ges.py): GES pipeline comparison.
+- [test_significance.py](test_significance.py): paired Wilcoxon analysis for no-constraint vs logistic-selective PC.
+- [test_detection_eval.py](test_detection_eval.py): detector precision and recall evaluation.
+- [test_alarm_network.py](test_alarm_network.py): larger-scale Alarm experiment.
+- [nhanes_validation.py](nhanes_validation.py): NHANES validation and bootstrap edge stability.
+- [test_mnar_mechanisms.py](test_mnar_mechanisms.py): alternative MNAR injection mechanisms.
+- [test_noisy_constraints.py](test_noisy_constraints.py): robustness to incorrect constraint directions.
+- [generate_figures.py](generate_figures.py): figure generation from result CSV files.
+- [src/](src/): reusable implementations for data loading, missingness injection, algorithms, detection, constraints, and evaluation.
+- [notebooks/](notebooks/): retained development notebooks for baseline and missingness-injection stages.
+- [results/](results/): CSV outputs used by the dissertation and the figure-generation pipeline.
+- [figures/](figures/): generated figure images.
+- [optional_experiments/](optional_experiments/): optional or exploratory scripts and outputs that were separated from the core submission.
+- [bug_fix_log.txt](bug_fix_log.txt) and [rerun_log.txt](rerun_log.txt): notes about earlier fixes and reruns.
 
-I then extended the experiments in three directions.
+## Installation
 
-**Alarm network scalability.** I repeated the core pipeline on the Alarm network (37 nodes, 46 edges), which is much larger than Asia (8 nodes) and Sachs (11 nodes). At this scale, listwise deletion becomes infeasible: at 30% MNAR, roughly one row in a thousand survives as a complete case across all 37 variables. I used mode imputation as a practical alternative, which means the Alarm results measure PC and GES on imputed data. The logistic selective condition reduced mean SHD from 31.9 to 19.1, close to the global oracle at 18.4.
+The project was prepared for a standard virtual environment.
 
-**NHANES real-world validation.** I applied the pipeline to NHANES 2017 to 2018 data (12 variables, 9,254 participants, 28.7% complete cases). Since there is no ground truth causal graph for real data, I used bootstrap edge stability as the evaluation criterion. Edges that appear consistently across bootstrap samples are treated as reliable. The logistic detector flagged 53 variable pairs. Constrained PC recovered several edges with stability above 0.9 that unconstrained PC missed or weakened.
+```bash
+python -m venv .venv
 
-**Robustness to incorrect domain knowledge.** I tested what happens when the constraint directions are partially wrong. For the Sachs network at 30% MNAR, I took the logistic selective constraints and reversed a proportion of the edge directions (10%, 20%, 30%, 50%). Each noise level was repeated across 10 random seeds to measure sensitivity to which specific edges were flipped. At 10% noise the pipeline still reduces mean SHD from 27.3 to 8.2 compared to no constraints. At 50% noise the benefit disappears and performance matches or slightly exceeds the no-constraint baseline. This puts a practical bound on how much domain knowledge error the pipeline can tolerate.
+# Windows
+.venv\Scripts\activate
 
-## What I found
+# macOS / Linux
+source .venv/bin/activate
 
-The logistic detection pipeline reduces mean SHD by over 80% compared to unconstrained structure learning under MNAR conditions. Improvements are statistically significant at all severity levels and across both benchmark networks (Wilcoxon signed-rank, p < 0.05 in all 8 comparisons).
-
-The chi-square detector has very low recall at low MNAR severity, dropping to 6% on Sachs at 10% missingness. The logistic detector maintains recall between 75% and 94% across all tested conditions. The pipeline generalises to both PC and GES.
-
-At 50% MNAR on Sachs, PC under listwise deletion misses every true edge (FN rate = 1.0, std = 0 across 30 bootstrap iterations). This is the most severe failure mode in the experiments.
-
-## How to run
-
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
-pip install causal-learn pgmpy scipy scikit-learn pandas numpy matplotlib seaborn
-python run_experiments.py
-python test_pipeline_full.py
-python test_significance.py
-python test_alarm_network.py
-python nhanes_validation.py
-python test_noisy_constraints.py
-python generate_figures.py
-```
 
-## Scripts
+A Python 3.11 environment is recommended for the final reproducibility check. The dependency set is intended to be reproducible from the requirements file and does not rely on ad-hoc runtime installation.
 
-| Script | What it does |
-|---|---|
-| `run_experiments.py` | Main degradation experiment: PC and GES on Asia and Sachs across all missingness types and severity levels |
-| `test_pipeline_full.py` | Four-condition constraint pipeline (no constraints, chi-square, logistic, oracle) on Asia and Sachs |
-| `test_pipeline_ges.py` | Same pipeline for GES |
-| `test_significance.py` | Wilcoxon signed-rank tests comparing no-constraint vs logistic-selective PC |
-| `test_detection_eval.py` | Precision and recall of chi-square and logistic detectors across severity levels |
-| `test_alarm_network.py` | Alarm network experiment: baseline, MNAR degradation, detection, pipeline, and Wilcoxon at scale (mode imputation) |
-| `nhanes_validation.py` | Real-world validation on NHANES 2017 to 2018: bootstrap edge stability under PC, constrained PC, and GES |
-| `test_mnar_mechanisms.py` | Comparison of four MNAR injection variants: threshold, gradient, correlated, mixed |
-| `test_noisy_constraints.py` | Robustness analysis: logistic constraints with a proportion of directions reversed, 10 seeds per noise level |
-| `generate_figures.py` | Generates all figures from results CSVs |
+The final validation used Python 3.11.9, causal-learn 0.1.4.7 and pgmpy 1.1.2. causal-learn and pgmpy are pinned in requirements.txt.
 
-## Tools used
+## Running the project
 
-Python 3, causal-learn 0.1.4.7, pgmpy 1.1.2, scikit-learn, scipy, pandas, numpy, matplotlib, seaborn.
+A practical execution order is:
+
+1. Baseline and missingness experiments
+   - `python run_experiments.py`
+   - Writes [results/baseline_results.csv](results/baseline_results.csv) and [results/missingness_results.csv](results/missingness_results.csv).
+   - Uses synthetic data only; no internet access required.
+
+2. Detection evaluation
+   - `python test_detection_eval.py`
+   - Writes [results/detection_eval.csv](results/detection_eval.csv).
+   - No internet access required.
+
+3. PC constraint pipeline
+   - `python test_pipeline_full.py`
+   - Writes [results/pipeline_results.csv](results/pipeline_results.csv).
+   - No internet access required.
+
+4. GES constraint pipeline
+   - `python test_pipeline_ges.py`
+   - Writes [results/pipeline_ges_results.csv](results/pipeline_ges_results.csv).
+   - No internet access required.
+
+5. Statistical significance
+   - `python test_significance.py`
+   - Writes [results/significance_results.csv](results/significance_results.csv).
+   - No internet access required.
+
+6. Alarm scalability experiment
+   - `python test_alarm_network.py`
+   - Writes [results/alarm_missingness_results.csv](results/alarm_missingness_results.csv) and [results/alarm_pipeline_results.csv](results/alarm_pipeline_results.csv).
+   - No internet access required.
+
+7. NHANES validation
+   - `python nhanes_validation.py`
+   - Writes [results/nhanes_results.csv](results/nhanes_results.csv) and [results/nhanes_stability.csv](results/nhanes_stability.csv).
+   - Downloads NHANES XPT files on first run into [data/nhanes/](data/nhanes/).
+   - Internet access is required for the first download.
+
+8. Robustness to noisy constraints
+   - `python test_noisy_constraints.py`
+   - Writes [results/noisy_constraints_results.csv](results/noisy_constraints_results.csv) and [results/noisy_constraints_summary.csv](results/noisy_constraints_summary.csv).
+   - No internet access required.
+
+9. Figure generation
+   - `python generate_figures.py`
+   - Writes the PNG files in [figures/](figures/).
+   - Requires the result CSV files listed above.
+
+## NHANES data
+
+The NHANES workflow downloads public XPT files from the CDC website on first execution. These files are stored under [data/nhanes/](data/nhanes/) and are intentionally excluded from git by the repository ignore rules. The validation uses the public NHANES 2017 to 2018 files and the variables listed in [nhanes_validation.py](nhanes_validation.py).
+
+HTTPS certificate verification is enabled by default. If a local certificate or network configuration prevents the CDC download, macOS/Linux users can run `NHANES_SSL_VERIFY=false python nhanes_validation.py`. This disables certificate verification, prints a warning and should only be used when necessary.
+
+## Results and figures
+
+The repository already contains a set of result CSV files in [results/](results/) and a corresponding figure set in [figures/](figures/). The figure-generation script reads these files and creates the PNG outputs in [figures/](figures/).
+
+## Notebooks
+
+The first two development stages are retained as Jupyter notebooks in [notebooks/](notebooks/). The later experiments were consolidated into Python scripts for more reproducible batch execution.
+
+## Executable-file requirement
+
+This repository is a research experiment pipeline rather than a compiled application. The intended execution path is through Python scripts and reproducible setup instructions.
+
+## Limitations
+
+The retained methodology has several important limitations:
+- listwise deletion and row collapse are used in the benchmark experiments;
+- the SHD implementation in [src/evaluation/metrics.py](src/evaluation/metrics.py) is a directed edge-set symmetric difference rather than a standard CPDAG-aware library implementation;
+- undirected edges in the PC and GES wrappers are oriented alphabetically for deterministic evaluation; this is a deterministic convention rather than a causal orientation inferred by the algorithm;
+- the constraint mechanism in [src/detection/constrain.py](src/detection/constrain.py) uses known ground-truth directions for benchmark pairs, which makes the selective-constraint experiment oracle-assisted;
+- NHANES has no ground-truth causal graph, so the validation uses bootstrap stability and alphabetical orientation conventions for flagged pairs;
+- the Alarm experiment uses an imputation strategy because listwise deletion becomes infeasible at that network scale;
+- detection quality and incorrect domain knowledge can both affect the constraint pipeline.
